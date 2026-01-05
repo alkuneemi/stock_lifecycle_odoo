@@ -25,7 +25,7 @@ between main sites and warehouses.
 """,
 
     "version": "1.0.0",
-    "author": "Al Kuneemi",
+    "author": "ADEX",
     "website": "https://www.odoo.com",
     "license": "LGPL-3",
 
@@ -66,3 +66,4 @@ between main sites and warehouses.
     # دعم الإصدارات
     "odoo_version": "18.0",
 }
+
