@@ -1,12 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Internal Transfer & Shipment Lifecycle</title>
+</head>
+<body>
+
 <!--
   Module: stock_lifecycle
   File: static/description/index.html
   Notes:
-  - ضع الصور داخل نفس المجلد static/description/
-  - أسماء الصور المقترحة:
+  - Place images inside: static/description/
+  - Suggested filenames:
       hero.png
       timeline.png
       sidebar.png
+      truck.png (optional small icon)
 -->
 
 <section class="oe_container">
@@ -21,32 +31,25 @@
         <span class="badge badge-primary">Odoo 18</span>
         <span class="badge badge-success">Inventory</span>
         <span class="badge badge-info">Internal Transfers</span>
-        <span class="badge badge-secondary">Arabic / English</span>
-      </div>
-
-      <div style="margin-top:16px;">
-        <a href="#ar" class="btn btn-primary">العربية</a>
-        <a href="#en" class="btn btn-default">English</a>
+        <span class="badge badge-secondary">Audit Trail</span>
       </div>
     </div>
   </div>
 </section>
 
 <style>
-  .lang-wrap{ max-width:1100px; margin:0 auto; }
-  .lang-panel{ display:none; }
-  #ar:target ~ .lang-wrap .lang-ar{ display:block; }
-  #en:target ~ .lang-wrap .lang-en{ display:block; }
-  .lang-wrap .lang-ar{ display:block; }
+  .wrap{ max-width:1100px; margin:0 auto; padding:0 14px; }
 
   .card{
     background:#fff;
     border:1px solid #eee;
     border-radius:14px;
     padding:18px;
-    margin-bottom:24px;
+    margin:18px 0 24px 0;
     box-shadow:0 6px 18px rgba(0,0,0,.06);
   }
+
+  .muted{ color:#666; }
 
   .grid{
     display:flex;
@@ -66,20 +69,7 @@
     box-shadow:0 10px 24px rgba(0,0,0,.08);
   }
 
-  .steps{
-    display:flex;
-    gap:12px;
-    flex-wrap:wrap;
-  }
-  .step{
-    flex:1 1 220px;
-    border:1px solid #eee;
-    border-radius:12px;
-    padding:12px;
-  }
-
-  .muted{ color:#666; }
-
+  .pills{ margin-top:10px; }
   .pill{
     display:inline-block;
     padding:6px 10px;
@@ -88,123 +78,199 @@
     color:#1f7a3a;
     font-weight:700;
     font-size:12px;
-    margin:4px 4px 0 0;
+    margin:4px 6px 0 0;
+  }
+
+  .steps{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-top:10px;
+  }
+  .step{
+    flex:1 1 240px;
+    border:1px solid #eee;
+    border-radius:12px;
+    padding:12px;
+    background:#fafafa;
+  }
+  .step strong{
+    display:block;
+    margin-bottom:6px;
+  }
+
+  .two-col{
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .two-col > div{
+    flex:1 1 420px;
+    min-width:280px;
+  }
+
+  .checklist{
+    margin:0;
+    padding-left:18px;
+    line-height:1.9;
+  }
+
+  .callout{
+    background:#f6f8ff;
+    border:1px solid #e6e9ff;
+    border-radius:12px;
+    padding:14px 16px;
+    line-height:1.9;
+  }
+
+  .small{
+    font-size:12px;
+    color:#777;
   }
 </style>
 
-<div id="ar"></div>
-<div id="en"></div>
+<div class="wrap">
 
-<div class="lang-wrap">
+  <!-- Hero / Overview -->
+  <div class="card">
+    <div class="grid">
+      <div>
+        <h2>Why this module?</h2>
+        <p class="muted" style="line-height:1.9;">
+          Internal transfers are often the root cause of inventory discrepancies when responsibilities,
+          approvals, and shipment handovers are not clearly tracked. This module introduces a complete
+          lifecycle workflow with accountable signatories, timestamps, and a clean visual timeline.
+        </p>
 
-  <!-- ===================== Arabic ===================== -->
-  <div class="lang-panel lang-ar" style="direction:rtl;">
-
-    <div class="card">
-      <div class="grid">
-        <div>
-          <h2>مديول تتبع دورة حياة التحويل</h2>
-          <p class="muted" style="line-height:1.9;">
-            مديول احترافي لإدارة وتتبع التحويلات الداخلية والشحنات بين المواقع والمخازن،
-            مع تحديد المسؤول في كل مرحلة وعرض خط زمني واضح يوثّق جميع الإجراءات.
-          </p>
-
-          <span class="pill">تتبع كامل</span>
-          <span class="pill">حوكمة</span>
-          <span class="pill">سجل أحداث</span>
-          <span class="pill">صلاحيات</span>
-        </div>
-
-        <div>
-          <img src="hero.png" class="shot" alt="Stock Lifecycle Workflow">
+        <div class="pills">
+          <span class="pill">Approval Workflow</span>
+          <span class="pill">Accountability</span>
+          <span class="pill">Audit Trail</span>
+          <span class="pill">Transfer Log</span>
         </div>
       </div>
-    </div>
 
-    <div class="card">
-      <h2>مراحل التحويل</h2>
-      <div class="steps">
-        <div class="step">1) إرسال طلب التحويل</div>
-        <div class="step">2) موافقة المدير</div>
-        <div class="step">3) موافقة مدير المخازن</div>
-        <div class="step">4) تأكيد إدارة الشحن</div>
-        <div class="step">5) الاستلام / مصادقة المنشئ</div>
+      <div>
+        <img src="hero.png" class="shot" alt="Internal Transfer & Shipment Lifecycle - Workflow Preview">
       </div>
     </div>
-
-    <div class="card">
-      <div class="grid">
-        <div>
-          <h2>المميزات الرئيسية</h2>
-          <ul>
-            <li>تحديد المخولين بالتوقيع حسب نوع التحويل</li>
-            <li>عرض صور المسؤولين في كل مرحلة</li>
-            <li>سجل زمني كامل لكل عملية</li>
-            <li>بحث سريع في سجل التحويلات</li>
-            <li>واجهة مناسبة للإدارة والتدقيق</li>
-          </ul>
-        </div>
-        <div>
-          <img src="timeline.png" class="shot" alt="Timeline View">
-        </div>
-      </div>
-    </div>
-
   </div>
 
-  <!-- ===================== English ===================== -->
-  <div class="lang-panel lang-en">
+  <!-- Workflow Steps -->
+  <div class="card">
+    <h2>Workflow Steps</h2>
+    <p class="muted" style="margin-top:6px; line-height:1.9;">
+      A clear, structured flow to ensure every stage has a responsible person and a recorded timestamp.
+    </p>
 
-    <div class="card">
-      <div class="grid">
-        <div>
-          <h2>Internal Transfer Lifecycle Module</h2>
-          <p class="muted" style="line-height:1.9;">
-            A professional workflow module to track internal transfers and shipments
-            with clear approvals, responsibilities, and a visual timeline.
-          </p>
+    <div class="steps">
+      <div class="step">
+        <strong>1) Submit Transfer Request</strong>
+        The requester creates an internal transfer and submits it for approval.
+      </div>
 
-          <span class="pill">Full Tracking</span>
-          <span class="pill">Governance</span>
-          <span class="pill">Audit Trail</span>
-          <span class="pill">Permissions</span>
-        </div>
+      <div class="step">
+        <strong>2) Direct Manager Approval</strong>
+        The designated manager approves or rejects the transfer request.
+      </div>
 
-        <div>
-          <img src="hero.png" class="shot" alt="Stock Lifecycle Workflow">
-        </div>
+      <div class="step">
+        <strong>3) Warehouse Manager Approval</strong>
+        Warehouse approval ensures stock and destination readiness.
+      </div>
+
+      <div class="step">
+        <strong>4) Shipping Confirmation</strong>
+        Shipping confirms dispatch, handover, and readiness for receiving.
+      </div>
+
+      <div class="step">
+        <strong>5) Receiving / Final Validation</strong>
+        The receiver confirms arrival; the process closes with final validation.
       </div>
     </div>
+  </div>
 
-    <div class="card">
-      <h2>Workflow Steps</h2>
-      <div class="steps">
-        <div class="step">1) Submit Transfer Request</div>
-        <div class="step">2) Manager Approval</div>
-        <div class="step">3) Warehouse Approval</div>
-        <div class="step">4) Shipping Confirmation</div>
-        <div class="step">5) Receiving / Final Validation</div>
+  <!-- Key Features -->
+  <div class="card">
+    <div class="two-col">
+      <div>
+        <h2>Key Features</h2>
+        <ul class="checklist">
+          <li><b>Configurable signatories</b> per picking type (Manager / Warehouse Manager / Shipping Manager).</li>
+          <li><b>Avatar-based timeline</b> that shows the responsible person at each stage.</li>
+          <li><b>Full audit trail</b> with timestamps for every approval/confirmation action.</li>
+          <li><b>Side transfer log</b> with instant search by reference, number, or keywords.</li>
+          <li><b>Management-ready UI</b> designed for operational control and internal auditing.</li>
+        </ul>
+
+        <div class="callout" style="margin-top:14px;">
+          <b>Accountability by design:</b>
+          every stage is linked to the correct signatory, not the record creator.
+          This reduces manipulation and ensures clear responsibility.
+        </div>
+
+        <p class="small" style="margin-top:10px;">
+          Note: The timeline images are loaded from each signatory's partner avatar (if available),
+          otherwise initials are shown.
+        </p>
+      </div>
+
+      <div>
+        <img src="timeline.png" class="shot" alt="Avatar Timeline with Timestamps">
       </div>
     </div>
+  </div>
 
-    <div class="card">
-      <div class="grid">
-        <div>
-          <h2>Key Features</h2>
-          <ul>
-            <li>Configurable signatories per picking type</li>
-            <li>Avatar-based timeline visualization</li>
-            <li>Full audit trail with timestamps</li>
-            <li>Side transfer log with instant search</li>
-            <li>Management-ready clean interface</li>
-          </ul>
-        </div>
-        <div>
-          <img src="sidebar.png" class="shot" alt="Sidebar Transfer Log">
+  <!-- Sidebar Log + Search -->
+  <div class="card">
+    <div class="grid">
+      <div>
+        <h2>Transfer Log Sidebar</h2>
+        <p class="muted" style="line-height:1.9;">
+          A dedicated sidebar lists recent internal transfers with status badges and a live search box.
+          Quickly jump between transfers for verification, follow-up, and auditing.
+        </p>
+
+        <div class="pills">
+          <span class="pill">Quick Search</span>
+          <span class="pill">Status Badges</span>
+          <span class="pill">Fast Navigation</span>
         </div>
       </div>
-    </div>
 
+      <div>
+        <img src="sidebar.png" class="shot" alt="Sidebar Transfer Log with Search">
+      </div>
+    </div>
+  </div>
+
+  <!-- Use Cases -->
+  <div class="card">
+    <h2>Typical Use Cases</h2>
+    <ul class="checklist">
+      <li>Track internal transfers between main sites and remote warehouses.</li>
+      <li>Reduce discrepancies by enforcing approvals and logged handovers.</li>
+      <li>Improve audit readiness with timestamped event history.</li>
+      <li>Support operational control in environments with higher risk or security concerns.</li>
+    </ul>
+  </div>
+
+  <!-- Support / Requirements -->
+  <div class="card">
+    <h2>Compatibility & Requirements</h2>
+    <ul class="checklist">
+      <li><b>Odoo Version:</b> 18.0</li>
+      <li><b>Apps:</b> Inventory (stock)</li>
+      <li><b>Recommended:</b> Add partner avatars for best visualization.</li>
+    </ul>
+    <p class="small">
+      Please include screenshots and ensure the module folder is located at the repository root
+      under a single folder named <b>stock_lifecycle</b>.
+    </p>
   </div>
 
 </div>
+
+</body>
+</html>
