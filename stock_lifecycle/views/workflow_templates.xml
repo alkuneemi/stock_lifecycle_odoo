@@ -315,6 +315,40 @@
               background:#fafafa;
             }
             .muted{ color:#777; font-size:11px; }
+            /* ===== Truck icon فوق خط الشحن ===== */
+           /* ===== Truck icon فوق خط الشحن (أكبر وأعلى) ===== */
+            .wf-bar{
+              position: relative;
+            }
+            
+            .wf-truck{
+              position:absolute;
+              top:-40px;                 /* ⬆️ أعلى من السابق */
+              left:50%;
+              transform:translateX(-50%);
+              background:#fff;
+              border:1px solid #e8e8e8;
+              border-radius:999px;
+              padding:8px 14px;          /* ⬆️ تكبير الحاوية */
+              box-shadow:0 10px 20px rgba(0,0,0,.15);
+              line-height:1;
+              z-index:10;
+            }
+            
+             .wf-truck i{
+              font-size:28px;
+              color:#cf222e;
+            
+              transform: scaleX(-1);   /* 🔄 قلب الاتجاه أفقيًا */
+            }
+
+            
+            /* إذا الخط أخضر، الشاحنة خضراء */
+            .wf-bar.done .wf-truck i{
+              color:#2da44e;
+            }
+
+
           </style>
 
           <div class="wf-layout">
@@ -458,7 +492,14 @@
                     </div>
                   </div>
 
-                  <div t-attf-class="wf-bar #{'done' if stages.get('creator_confirmed') else 'todo'}"></div>
+                 <div t-attf-class="wf-bar #{'done' if stages.get('creator_confirmed') else 'todo'}">
+                    <t t-if="stages.get('shipping_confirmed')">
+                      <span class="wf-truck" title="تم تأكيد الشحن">
+                        <i class="fa fa-truck"></i>
+                      </span>
+                    </t>
+                  </div>
+
 
                   <!-- 5) تصديق المنشئ -->
                   <div class="wf-item">
@@ -648,6 +689,8 @@
 
   </data>
 </odoo>
+
+
 
 
 
