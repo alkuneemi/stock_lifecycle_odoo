@@ -1,0 +1,654 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data>
+
+    <template id="workflow_template" name="Stock Lifecycle Workflow">
+      <t t-call="web.html_container">
+        <t t-set="title">دورة حياة التحويل: <t t-esc="picking.name"/></t>
+
+        <div class="o_workflow_page wf-container">
+
+          <style>
+            /* ====== Container / Layout ====== */
+            .o_workflow_page,
+            .wf-container{
+              padding:24px;
+              max-width:1504px !important;
+              width:2004px !important;
+              margin:0 auto;
+              direction:rtl;
+              font-family:'Cairo', Arial, sans-serif;
+            }
+
+            .wf-card{
+              background:#fff;
+              border:1px solid #e6e6e6;
+              border-radius:16px;
+              padding:18px 18px 10px 18px;
+              box-shadow:0 6px 18px rgba(0,0,0,.06);
+              width:100% !important;
+              margin:0 auto;
+              overflow:visible;
+            }
+
+            /* كسر قيود بعض حاويات Odoo إن وجدت */
+            .o_web_client .o_content,
+            .o_action_manager{
+              overflow:visible !important;
+            }
+
+            /* ====== Two columns layout (Main + Right Sidebar) ====== */
+            .wf-layout{
+              display:flex;
+              flex-direction:row-reverse; /* ✅ sidebar يمين */
+              gap:16px;
+              align-items:stretch;
+              width:100%;
+            }
+
+            /* Right sidebar */
+            .wf-sidebar{
+              flex:0 0 360px;
+              max-width:360px;
+              background:#fff;
+              border:1px solid #e6e6e6;
+              border-radius:16px;
+              box-shadow:0 6px 18px rgba(0,0,0,.06);
+              padding:14px;
+              position:sticky;
+              top:14px;
+              height:calc(100vh - 36px);
+              overflow:auto;
+              margin:0;
+            }
+
+            .wf-sidebar-title{
+              font-size:14px;
+              font-weight:900;
+              color:#111;
+              margin:0 0 10px 0;
+            }
+
+            /* search input */
+            .wf-search{
+              width:100%;
+              padding:10px 12px;
+              border:1px solid #e6e6e6;
+              border-radius:12px;
+              outline:none;
+              font-size:13px;
+            }
+            .wf-search:focus{
+              border-color:#b9d5c2;
+              box-shadow:0 0 0 3px rgba(45,164,78,.12);
+            }
+
+            /* list items */
+            .wf-list{
+              margin-top:12px;
+              display:flex;
+              flex-direction:column;
+              gap:8px;
+            }
+
+            .wf-list-item{
+              display:flex;
+              align-items:center;
+              justify-content:space-between;
+              gap:10px;
+              padding:10px 10px;
+              border:1px solid #f0f0f0;
+              border-radius:12px;
+              cursor:pointer;
+              user-select:none;
+              text-decoration:none;
+            }
+            .wf-list-item:hover{ background:#fafafa; }
+            .wf-list-item.active{
+              border-color:#2da44e;
+              box-shadow:0 0 0 3px rgba(45,164,78,.10);
+            }
+
+            .wf-list-title{
+              font-weight:900;
+              font-size:13px;
+              color:#111;
+            }
+            .wf-list-sub{
+              font-size:11px;
+              color:#777;
+              margin-top:2px;
+              white-space:nowrap;
+            }
+
+            .wf-badge{
+              font-size:11px;
+              font-weight:900;
+              padding:6px 8px;
+              border-radius:999px;
+              background:#f3f3f3;
+              color:#444;
+              white-space:nowrap;
+            }
+            .wf-badge.done{ background:rgba(45,164,78,.12); color:#1f7a3a; }
+            .wf-badge.todo{ background:rgba(207,34,46,.10); color:#a0111d; }
+            .wf-badge.current{ background:rgba(31,111,235,.10); color:#1557b0; }
+
+            /* Main panel */
+            .wf-main{
+              flex:1 1 auto;
+              min-width:0;
+            }
+
+            /* Responsive: stack on small screens */
+            @media (max-width: 1100px){
+              .wf-layout{ flex-direction:column; }
+              .wf-sidebar{
+                position:relative;
+                top:auto;
+                height:auto;
+                max-width:none;
+                width:100%;
+                flex:1 1 auto;
+              }
+            }
+
+            /* ====== Header ====== */
+            .wf-title{
+              display:flex;
+              justify-content:space-between;
+              align-items:center;
+              gap:12px;
+              margin-bottom:14px;
+            }
+            .wf-title h3{
+              margin:0;
+              font-size:18px;
+              font-weight:900;
+              color:#111;
+            }
+            .wf-sub{
+              color:#666;
+              font-size:12px;
+              white-space:nowrap;
+            }
+
+            /* ====== Timeline (بدون سكرول على الشاشات الواسعة) ====== */
+            .wf-timeline{
+              display:flex;
+              align-items:flex-start;
+              flex-wrap:nowrap;
+              width:100%;
+              gap:10px;
+              overflow:hidden;             /* ✅ بدون سكرول */
+              padding:10px 6px 14px 6px;
+              direction:ltr;               /* ترتيب المراحل */
+              justify-content:space-between;
+            }
+
+            .wf-item{
+              flex:1 1 0;
+              min-width:0;
+              text-align:center;
+              position:relative;
+            }
+
+            .wf-circle{
+              width:74px;
+              height:74px;
+              border-radius:50%;
+              margin:0 auto 8px auto;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              border:4px solid rgba(255,255,255,.95);
+              box-shadow:0 10px 20px rgba(0,0,0,.10);
+              overflow:hidden;
+              color:#fff;
+              font-weight:900;
+            }
+
+            .wf-avatar{
+              width:100%;
+              height:100%;
+              object-fit:cover;
+              border-radius:50%;
+              display:block;
+            }
+
+            .wf-avatar-text{
+              font-size:14px;
+              font-weight:900;
+              color:#fff;
+            }
+
+            .wf-label{
+              font-size:12px;
+              font-weight:900;
+              color:#111;
+              white-space:nowrap;
+              overflow:hidden;
+              text-overflow:ellipsis;
+              max-width:100%;
+            }
+
+            .wf-dt{
+              margin-top:6px;
+              font-size:10.5px;
+              color:#666;
+              white-space:nowrap;
+              overflow:hidden;
+              text-overflow:ellipsis;
+            }
+            .wf-dt .muted{ color:#999; }
+
+            /* Bars */
+            .wf-bar{
+              flex:1 1 0;
+              min-width:18px;
+              max-width:90px;
+              height:8px;
+              margin-top:38px;
+              border-radius:999px;
+              background:#eee;
+              box-shadow:0 6px 12px rgba(0,0,0,.06);
+              opacity:.95;
+            }
+            .wf-bar.done{ background:#2da44e; }
+            .wf-bar.todo{ background:#cf222e; }
+            .wf-bar.current{ background:#1f6feb; }
+
+            /* Circle colors using stage state (reuse done/todo/current classes) */
+            .wf-circle.done{ background:#2da44e; }
+            .wf-circle.todo{ background:#cf222e; }
+            .wf-circle.current{ background:#1f6feb; }
+
+            /* إذا الشاشة ضاقت: رجع السكرول */
+            @media (max-width: 1200px){
+              .wf-timeline{
+                overflow-x:auto;
+                justify-content:flex-start;
+                padding:10px 18px;
+                gap:12px;
+                scroll-snap-type:x mandatory;
+                -webkit-overflow-scrolling:touch;
+              }
+              .wf-timeline::-webkit-scrollbar{ height:8px; }
+              .wf-timeline::-webkit-scrollbar-track{ background:#f3f3f3; border-radius:999px; }
+              .wf-timeline::-webkit-scrollbar-thumb{ background:#d1d1d1; border-radius:999px; }
+              .wf-timeline::-webkit-scrollbar-thumb:hover{ background:#bdbdbd; }
+              .wf-item{ min-width:180px; scroll-snap-align:start; }
+              .wf-bar{ min-width:80px; max-width:120px; }
+            }
+
+            /* ====== Tables Sections ====== */
+            .wf-section{
+              margin-top:16px;
+              border-top:1px dashed #e6e6e6;
+              padding-top:12px;
+            }
+            .wf-section.no-border{
+              border-top:0;
+              padding-top:0;
+            }
+            .wf-section h4{
+              margin:0 0 8px 0;
+              font-size:14px;
+              font-weight:900;
+              color:#111;
+            }
+
+            .wf-table{
+              width:100%;
+              border-collapse:collapse;
+              font-size:12px;
+            }
+            .wf-table th, .wf-table td{
+              padding:8px 10px;
+              border-bottom:1px solid #f0f0f0;
+              text-align:right;
+              vertical-align:top;
+            }
+            .wf-table th{
+              color:#444;
+              font-weight:900;
+              background:#fafafa;
+            }
+            .muted{ color:#777; font-size:11px; }
+          </style>
+
+          <div class="wf-layout">
+
+            <!-- ===== Right Sidebar ===== -->
+            <div class="wf-sidebar">
+              <div class="wf-sidebar-title">سجل التحاويل</div>
+              <input type="text" id="wfSearch" class="wf-search" placeholder="ابحث بالرقم / المرجع / العميل..." />
+
+              <div class="wf-list" id="wfList">
+                <t t-foreach="pickings" t-as="p">
+                  <a t-att-href="'/stock_lifecycle/workflow/%s' % p.id"
+                     t-attf-data-search="#{(p.name or '')} #{(p.origin or '')} #{(p.partner_id.name or '')}"
+                     t-attf-class="wf-list-item #{'active' if p.id == picking.id else ''}">
+
+                    <div style="text-align:right;">
+                      <div class="wf-list-title"><t t-esc="p.name"/></div>
+                      <div class="wf-list-sub">
+                        <t t-esc="p.picking_type_id.name"/>
+                        <t t-if="p.origin"> • <t t-esc="p.origin"/></t>
+                      </div>
+                    </div>
+
+                    <t t-set="badge_class"
+                       t-value="'done' if p.review_state == 'confirmed' else ('current' if p.id == picking.id else 'todo')"/>
+                    <span t-attf-class="wf-badge #{badge_class}">
+                      <t t-esc="p.review_state"/>
+                    </span>
+                  </a>
+                </t>
+              </div>
+            </div>
+
+            <!-- ===== Main Panel ===== -->
+            <div class="wf-main">
+              <div class="wf-card">
+
+                <div class="wf-title">
+                  <h3>دورة حياة التحويل</h3>
+                  <div class="wf-sub">
+                    رقم التحويل: <strong><t t-esc="picking.name"/></strong>
+                  </div>
+                </div>
+
+                <!-- ===== Timeline ===== -->
+                <div class="wf-timeline">
+
+                  <!-- 1) الإرسال للمدير -->
+                  <!-- 1) مقدم الطلب = partner_id -->
+                  <div class="wf-item">
+                    <t t-set="u" t-value="picking.partner_id"/>
+                    <div t-attf-class="wf-circle #{'done' if stages.get('sent_to_manager') else 'todo'}">
+                  
+                      <t t-if="u and u.image_128">
+                        <img t-att-src="'/web/image/res.partner/%s/image_128' % u.id"
+                             class="wf-avatar" t-att-alt="u.name"/>
+                      </t>
+                      <t t-else="">
+                        <span class="wf-avatar-text"><t t-esc="(u.name or '')[:2]"/></span>
+                      </t>
+                  
+                    </div>
+                  
+                    <div class="wf-label">أرسل طلب تحويل</div>
+                  
+                    <div class="wf-dt">
+                      <t t-if="picking.sent_to_manager_datetime">
+                        <span t-field="picking.sent_to_manager_datetime" t-options="{'widget':'datetime'}"/>
+                      </t>
+                      <t t-else=""><span class="muted">-</span></t>
+                    </div>
+                  </div>
+
+
+                  <div t-attf-class="wf-bar #{'done' if stages.get('manager_approved') else 'todo'}"></div>
+
+                  <!-- 2) موافقة المدير -->
+                  <div class="wf-item">
+                    <t t-set="m" t-value="picking.picking_type_id.manager_user_id"/>
+                    <div t-attf-class="wf-circle #{'done' if stages.get('manager_approved') else 'todo'}">
+                      <t t-if="m and m.partner_id and m.partner_id.image_128">
+                        <img t-att-src="'/web/image/res.partner/%s/image_128' % m.partner_id.id"
+                             class="wf-avatar" t-att-alt="m.name"/>
+                      </t>
+                      <t t-else="">
+                        <span class="wf-avatar-text"><t t-esc="(m.name or 'NA')[:2]"/></span>
+                      </t>
+                    </div>
+                    <div class="wf-label">موافقة المدير المباشر</div>
+                    <div class="wf-dt">
+                      <t t-if="picking.manager_approved_datetime">
+                        <span t-field="picking.manager_approved_datetime" t-options="{'widget':'datetime'}"/>
+                      </t>
+                      <t t-else=""><span class="muted">-</span></t>
+                    </div>
+                  </div>
+
+                  <div t-attf-class="wf-bar #{'done' if stages.get('warehouse_approved') else 'todo'}"></div>
+
+                  <!-- 3) موافقة المخازن -->
+                  <div class="wf-item">
+                    <t t-set="w" t-value="picking.picking_type_id.warehouse_manager_user_id"/>
+                    <div t-attf-class="wf-circle #{'done' if stages.get('warehouse_approved') else 'todo'}">
+                      <t t-if="w and w.partner_id and w.partner_id.image_128">
+                        <img t-att-src="'/web/image/res.partner/%s/image_128' % w.partner_id.id"
+                             class="wf-avatar" t-att-alt="w.name"/>
+                      </t>
+                      <t t-else="">
+                        <span class="wf-avatar-text"><t t-esc="(w.name or 'NA')[:2]"/></span>
+                      </t>
+                    </div>
+                    <div class="wf-label">موافقة مدير المخازن</div>
+                    <div class="wf-dt">
+                      <t t-if="picking.warehouse_approved_datetime">
+                        <span t-field="picking.warehouse_approved_datetime" t-options="{'widget':'datetime'}"/>
+                      </t>
+                      <t t-else=""><span class="muted">-</span></t>
+                    </div>
+                  </div>
+
+                  <div t-attf-class="wf-bar #{'done' if stages.get('shipping_confirmed') else 'todo'}"></div>
+
+                  <!-- 4) تأكيد الشحن -->
+                  <div class="wf-item">
+                    <t t-set="s" t-value="picking.picking_type_id.shipping_manager_user_id"/>
+                    <div t-attf-class="wf-circle #{'done' if stages.get('shipping_confirmed') else 'todo'}">
+                      <t t-if="s and s.partner_id and s.partner_id.image_128">
+                        <img t-att-src="'/web/image/res.partner/%s/image_128' % s.partner_id.id"
+                             class="wf-avatar" t-att-alt="s.name"/>
+                      </t>
+                      <t t-else="">
+                        <span class="wf-avatar-text"><t t-esc="(s.name or 'NA')[:2]"/></span>
+                      </t>
+                    </div>
+                    <div class="wf-label">تأكيد إدارة الشحن</div>
+                    <div class="wf-dt">
+                      <t t-if="picking.shipping_confirmed_datetime">
+                        <span t-field="picking.shipping_confirmed_datetime" t-options="{'widget':'datetime'}"/>
+                      </t>
+                      <t t-else=""><span class="muted">-</span></t>
+                    </div>
+                  </div>
+
+                  <div t-attf-class="wf-bar #{'done' if stages.get('creator_confirmed') else 'todo'}"></div>
+
+                  <!-- 5) تصديق المنشئ -->
+                  <div class="wf-item">
+                    <t t-set="c" t-value="picking.create_uid"/>
+                    <div t-attf-class="wf-circle #{'done' if stages.get('creator_confirmed') else 'todo'}">
+                      <t t-if="c and c.partner_id and c.partner_id.image_128">
+                        <img t-att-src="'/web/image/res.partner/%s/image_128' % c.partner_id.id"
+                             class="wf-avatar" t-att-alt="c.name"/>
+                      </t>
+                      <t t-else="">
+                        <span class="wf-avatar-text"><t t-esc="(c.name or '')[:2]"/></span>
+                      </t>
+                    </div>
+                    <div class="wf-label"> استلام امين المخزن</div>
+                    <div class="wf-label"> (مقدم الطلب)</div>
+                    <div class="wf-dt">
+                      <t t-if="picking.creator_confirmed_datetime">
+                        <span t-field="picking.creator_confirmed_datetime" t-options="{'widget':'datetime'}"/>
+                      </t>
+                      <t t-else=""><span class="muted">-</span></t>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- ✅ Final Validate Button (after creator confirmation) -->
+                <t t-if="stages.get('creator_confirmed') and picking.state != 'done'">
+                  <div style="margin-top:14px; text-align:center;">
+                    <a t-att-href="'/stock_lifecycle/validate/%s' % picking.id"
+                       class="btn btn-primary"
+                       style="background:#2da44e;border-color:#2da44e;padding:10px 16px;border-radius:10px;font-weight:900;">
+                      التصديق النهائي (ترحيل التحويل)
+                    </a>
+                    <div class="muted" style="margin-top:6px;">
+                      يظهر هذا الزر بعد اكتمال مرحلة تصديق المنشئ ليقوم المدير العام بإتمام العملية.
+                    </div>
+                  </div>
+                </t>
+
+                <!-- ===== Transfer Moves (move_ids_without_package) ===== -->
+                <div class="wf-section no-border" style="margin-top:14px;">
+                  <h4>بنود التحويل</h4>
+                  <table class="wf-table">
+  <thead>
+    <tr>
+      <th style="width:38%;">الصنف</th>
+      <th style="width:12%;">المطلوب</th>
+      <th style="width:12%;">تم التوصيل</th>
+      <th style="width:19%;">الموقع المصدري</th>
+      <th style="width:19%;">الموقع الوجهة</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <t t-set="idx" t-value="0"/>
+    <t t-set="moves" t-value="picking.move_ids_without_package.filtered(lambda m: m.state != 'cancel')"/>
+
+    <t t-if="moves">
+      <t t-foreach="moves" t-as="m">
+        <t t-set="idx" t-value="idx + 1"/>
+        <tr>
+          <td>
+            <strong><t t-esc="m.product_id.display_name or ''"/></strong>
+          </td>
+
+          <td>
+            <t t-esc="m.product_uom_qty or 0.0"/>
+            <span class="muted"> <t t-esc="m.product_uom.name or ''"/></span>
+          </td>
+
+          <td>
+            <t t-esc="m.quantity or 0.0"/>
+            <span class="muted"> <t t-esc="m.product_uom.name or ''"/></span>
+          </td>
+
+          <td><t t-esc="m.location_id.display_name or ''"/></td>
+          <td><t t-esc="m.location_dest_id.display_name or ''"/></td>
+        </tr>
+      </t>
+    </t>
+
+    <t t-else="">
+      <tr>
+        <td colspan="5" class="muted">لا توجد بنود.</td>
+      </tr>
+    </t>
+  </tbody>
+</table>
+
+
+                  
+                </div>
+
+                <!-- ===== Events ===== -->
+                <div class="wf-section">
+                  <h4>سجل الأحداث</h4>
+                  <table class="wf-table">
+                    <thead>
+                      <tr>
+                        <th>حدث</th>
+                        <th style="width:220px;">تاريخ ووقت</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>أُرسل للمدير</td>
+                        <td>
+                          <t t-if="picking.sent_to_manager_datetime">
+                            <span t-field="picking.sent_to_manager_datetime" t-options="{'widget':'datetime'}"/>
+                          </t>
+                          <t t-else=""><span class="muted">-</span></t>
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td>وافق المدير</td>
+                        <td>
+                          <t t-if="picking.manager_approved_datetime">
+                            <span t-field="picking.manager_approved_datetime" t-options="{'widget':'datetime'}"/>
+                          </t>
+                          <t t-else=""><span class="muted">-</span></t>
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td>وافق مدير المخازن</td>
+                        <td>
+                          <t t-if="picking.warehouse_approved_datetime">
+                            <span t-field="picking.warehouse_approved_datetime" t-options="{'widget':'datetime'}"/>
+                          </t>
+                          <t t-else=""><span class="muted">-</span></t>
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td>أكد مدير الشحن</td>
+                        <td>
+                          <t t-if="picking.shipping_confirmed_datetime">
+                            <span t-field="picking.shipping_confirmed_datetime" t-options="{'widget':'datetime'}"/>
+                          </t>
+                          <t t-else=""><span class="muted">-</span></t>
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td>مصادقة المنشئ</td>
+                        <td>
+                          <t t-if="picking.creator_confirmed_datetime">
+                            <span t-field="picking.creator_confirmed_datetime" t-options="{'widget':'datetime'}"/>
+                          </t>
+                          <t t-else=""><span class="muted">-</span></t>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ===== Search filter script ===== -->
+          <script>
+            (function () {
+              function ready(fn){ if (document.readyState !== 'loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
+              ready(function () {
+                var input = document.getElementById('wfSearch');
+                var list  = document.getElementById('wfList');
+                if (!input || !list) return;
+
+                input.addEventListener('input', function () {
+                  var q = (input.value || '').toLowerCase().trim();
+                  var items = list.querySelectorAll('.wf-list-item');
+                  items.forEach(function (el) {
+                    var hay = (el.getAttribute('data-search') || '').toLowerCase();
+                    el.style.display = hay.indexOf(q) !== -1 ? '' : 'none';
+                  });
+                });
+              });
+            })();
+          </script>
+
+        </div>
+      </t>
+    </template>
+
+  </data>
+</odoo>
+
+
+
+

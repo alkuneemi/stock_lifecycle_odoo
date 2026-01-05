@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_picking_form_inherit_manager_approval" model="ir.ui.view">
+      <field name="name">stock.picking.form.manager.approval</field>
+      <field name="model">stock.picking</field>
+      <field name="inherit_id" ref="stock.view_picking_form"/>
+      <field name="arch" type="xml">
+
+        <!-- Buttons in header for multi-stage approvals -->
+     <xpath expr="//header" position="inside">
+
+    <!-- Initial: sender sends to manager -->
+    <button name="action_send_to_manager_for_approval"
+            type="object"
+            string="إرسال للمدير للموافقة"
+            class="btn-primary"
+            />
+
+    <!-- Manager stage -->
+    <button name="action_manager_approve"
+            type="object"
+            string="موافقة المدير"
+            class="btn-success"
+           />
+
+    <button name="action_manager_reject"
+            type="object"
+            string="رفض (من المدير)"
+            class="btn-secondary"
+            />
+
+    <!-- Warehouse manager stage -->
+    <button name="action_warehouse_approve"
+            type="object"
+            string="موافقة مدير المخازن"
+            class="btn-primary"
+          />
+
+    <button name="action_warehouse_reject"
+            type="object"
+            string="رفض (مدير المخازن)"
+            class="btn-secondary"
+          />
+
+    <!-- Shipping manager stage -->
+    <button name="action_shipping_confirm"
+            type="object"
+            string="تأكيد مدير الشحن"
+            class="btn-primary"
+          />
+
+    <button name="action_shipping_reject"
+            type="object"
+            string="رفض (مدير الشحن)"
+            class="btn-secondary"
+           />
+
+    <!-- Final confirm by requester after shipment -->
+    <button name="action_final_confirm"
+            type="object"
+            string="تصديق الشحنة"
+            class="btn-success"
+            />
+    <button name="action_open_workflow"
+      type="object"
+      string="عرض دورة الحياة"
+      class="btn-info"/>
+
+</xpath>
+
+        <!-- show review state, manager assignment and timestamps -->
+      
+
+      </field>
+    </record>
+
+      <record id="action_report_transfer_order" model="ir.actions.report">
+      <field name="name">أمر التحويل</field>
+      <field name="model">stock.picking</field>
+      <field name="report_type">qweb-pdf</field>
+      <field name="report_name">stock_lifecycle.report_transfer_order</field>
+      <field name="report_file">stock_lifecycle.report_transfer_order</field>
+      <field name="print_report_name">'Transfer Order - %s' % (object.name or '')</field>
+      <field name="binding_model_id" ref="stock.model_stock_picking"/>
+      <field name="binding_type">report</field>
+    </record>
+
+
+    <template id="report_transfer_order">
+  <t t-call="web.html_container">
+    <t t-foreach="docs" t-as="doc">
+      <t t-call="web.external_layout">
+
+        <style>
+          @page { margin: 6mm 8mm 10mm 8mm; }
+          * { font-family:'Cairo', Arial, sans-serif; }
+          .box { border:1px solid #d9d9d9; border-radius:10px; padding:10px; }
+          .muted { color:#666; font-size:10px; }
+          .title { font-size:18px; font-weight:900; }
+          .bar { height:4px; border-radius:20px; background:#17693a; margin:6px 0 12px 0; }
+          .t { width:100%; border-collapse:collapse; }
+          .t th, .t td { border:1px solid #d9d9d9; padding:6px; }
+          .t th { background:#f5f5f5; font-weight:900; }
+          .center { text-align:center; }
+          .right { text-align:right; direction:rtl; }
+        </style>
+
+        <!-- Header -->
+        <div class="right">
+          <div class="title">
+            أمر تحويل مخزون
+            <span class="muted">Transfer Order</span>
+          </div>
+          <div class="bar"></div>
+        </div>
+
+        <!-- Info -->
+        <table style="width:100%; border-collapse:separate; border-spacing:10px 0;">
+          <tr>
+            <td style="width:60%; vertical-align:top;">
+              <div class="box right">
+                <div style="font-weight:900;">بيانات التحويل</div>
+                <table style="width:100%; margin-top:6px;">
+                  <tr><td>رقم التحويل</td><td><span t-field="doc.name"/></td></tr>
+                  <tr><td>نوع العملية</td><td><span t-field="doc.picking_type_id"/></td></tr>
+                  <tr><td>من</td><td><span t-field="doc.location_id"/></td></tr>
+                  <tr><td>إلى</td><td><span t-field="doc.location_dest_id"/></td></tr>
+                  <tr><td>التاريخ</td><td><span t-field="doc.scheduled_date"/></td></tr>
+                </table>
+              </div>
+            </td>
+
+            <td style="width:40%; vertical-align:top;">
+              <div class="box right">
+                <div style="font-weight:900;">الحالة</div>
+                <table style="width:100%; margin-top:6px;">
+                  <tr><td>الحالة</td><td><span t-field="doc.state"/></td></tr>
+                  <tr>
+                    <td>مرحلة المراجعة</td>
+                    <td>
+                      <t t-if="doc._fields.get('review_state')">
+                        <t t-esc="dict(doc._fields['review_state'].selection).get(doc.review_state)"/>
+                      </t>
+                    </td>
+                  </tr>
+                  <tr><td>المسؤول</td><td><span t-field="doc.user_id"/></td></tr>
+                </table>
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Lines -->
+        <div class="right" style="margin-top:12px; font-weight:900;">
+          بنود التحويل
+        </div>
+
+        <table class="t right" style="margin-top:6px;">
+          <thead>
+            <tr>
+              <th class="center" style="width:30px;">م</th>
+              <th class="right">الصنف</th>
+              <th class="center" style="width:90px;">كمية الطلب</th>
+              <th class="center" style="width:90px;">الكمية المنفذة</th>
+              <th class="center" style="width:70px;">الوحدة</th>
+              <th class="right">المصدر</th>
+              <th class="right">الوجهة</th>
+            </tr>
+          </thead>
+          <tbody>
+            <t t-set="i" t-value="0"/>
+            <t t-foreach="doc.move_ids_without_package" t-as="l">
+              <t t-set="i" t-value="i + 1"/>
+              <tr>
+                <td class="center"><t t-esc="i"/></td>
+                <td class="right"><t t-esc="l.product_id.display_name"/></td>
+                <td class="center"><t t-esc="l.product_uom_qty"/></td>
+                <td class="center"><t t-esc="l.quantity"/></td>
+                <td class="center"><t t-esc="l.product_uom.name"/></td>
+                <td class="right"><t t-esc="l.location_id.display_name"/></td>
+                <td class="right"><t t-esc="l.location_dest_id.display_name"/></td>
+              </tr>
+            </t>
+          </tbody>
+        </table>
+
+        <!-- Approvals Horizontal -->
+        <div class="right" style="margin-top:14px; font-weight:900;">
+          التأكيدات
+        </div>
+
+        <table class="t right" style="margin-top:6px; font-size:10px;">
+          <thead>
+            <tr>
+              <th class="center">إرسال</th>
+              <th class="center">موافقة المدير</th>
+              <th class="center">مدير المخازن</th>
+              <th class="center">مدير الشحن</th>
+              <th class="center">مصادقة المنشئ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="center"><span t-field="doc.sent_to_manager_datetime"/></td>
+              <td class="center"><span t-field="doc.manager_approved_datetime"/></td>
+              <td class="center"><span t-field="doc.warehouse_approved_datetime"/></td>
+              <td class="center"><span t-field="doc.shipping_confirmed_datetime"/></td>
+              <td class="center"><span t-field="doc.creator_confirmed_datetime"/></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Signatures -->
+        <div style="margin-top:30px;">
+          <table style="width:100%; border-collapse:separate; border-spacing:20px 0;">
+            <tr>
+              <td style="width:33%; text-align:center;">
+                <div class="box">
+                  <div style="margin-bottom:40px; font-weight:900;">توقيع مدير المخازن</div>
+                </div>
+              </td>
+              <td style="width:33%; text-align:center;">
+                <div class="box">
+                  <div style="margin-bottom:40px; font-weight:900;">توقيع السائق</div>
+                </div>
+              </td>
+              <td style="width:33%; text-align:center;">
+                <div class="box">
+                  <div style="margin-bottom:40px; font-weight:900;">توقيع المستلم</div>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+      </t>
+    </t>
+  </t>
+</template>
+
+</odoo>
+
+
+
+
